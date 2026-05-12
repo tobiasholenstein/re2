@@ -30,6 +30,7 @@
 #include <atomic>
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <utility>
@@ -120,7 +121,7 @@ class ScalableRWMutex {
   const int num_shards_;
   std::unique_ptr<Shard[]> shards_;
   std::atomic<bool> writer_pending_{false};
-  absl::Mutex write_mu_;
+  std::mutex write_mu_;
 };
 
 // Controls whether the DFA should bail out early if the NFA would be faster.
