@@ -152,8 +152,7 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
   if (v != NULL) {
     if (tl_matches.max_size() < size_)
       tl_matches.resize(size_);
-    else
-      tl_matches.clear();
+    tl_matches.clear();
     matches = &tl_matches;
     v->clear();
   }
