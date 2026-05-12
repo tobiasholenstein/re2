@@ -146,13 +146,27 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
   hooks::context = NULL;
 #endif
   bool dfa_failed = false;
-  std::unique_ptr<SparseSet> matches;
+  SparseSet* matches = NULL;
+#ifdef RE2_HAVE_THREAD_LOCAL
+  static thread_local SparseSet tl_matches;
   if (v != NULL) {
-    matches.reset(new SparseSet(size_));
+    if (tl_matches.max_size() < size_)
+      tl_matches.resize(size_);
+    else
+      tl_matches.clear();
+    matches = &tl_matches;
     v->clear();
   }
+#else
+  std::unique_ptr<SparseSet> matches_owner;
+  if (v != NULL) {
+    matches_owner.reset(new SparseSet(size_));
+    matches = matches_owner.get();
+    v->clear();
+  }
+#endif
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored, Prog::kManyMatch,
-                              NULL, &dfa_failed, matches.get());
+                              NULL, &dfa_failed, matches);
   if (dfa_failed) {
     if (options_.log_errors())
       ABSL_LOG(ERROR) << "DFA out of memory: "
